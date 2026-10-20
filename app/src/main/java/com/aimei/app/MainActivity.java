@@ -285,7 +285,7 @@ public final class MainActivity extends Activity {
                 + "请先阅读它的隐私政策。爱美本身不录制或保存试衣视频。\n\n"
                 + "网站请求摄像头时，仅向 Anywear 官方 HTTPS 页面开放摄像头。")
             .setPositiveButton("服务隐私政策", (dialog, which) ->
-                external("https://docs.platform.decart.ai/privacy-policy"))
+                external("https://docs.platform.decart.ai/resources/privacy-policy"))
             .setNegativeButton("关闭", null).show();
     }
 
