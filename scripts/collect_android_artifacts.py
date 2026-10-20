@@ -2,6 +2,7 @@
 import hashlib
 import os
 import shutil
+import subprocess
 import zipfile
 from pathlib import Path
 
@@ -13,9 +14,13 @@ if not apks:
     raise SystemExit("Build did not produce a debug APK")
 checksums = []
 for index, path in enumerate(apks):
-    name = "Aimei-debug.apk" if len(apks) == 1 else f"Aimei-debug-{index + 1}.apk"
+    name = "Aimei-0.6.0.apk" if len(apks) == 1 else f"Aimei-0.6.0-{index + 1}.apk"
     output = destination / name
     shutil.copy2(path, output)
+    tools = sorted((Path(os.environ["ANDROID_HOME"]) / "build-tools").glob("*/apksigner"))
+    if not tools:
+        raise SystemExit("APK signature verification tool not found")
+    subprocess.run([str(tools[-1]), "verify", "--verbose", "--print-certs", str(output)], check=True)
     checksums.append(hashlib.sha256(output.read_bytes()).hexdigest() + "  " + name)
 (destination / "SHA256SUMS.txt").write_text("\n".join(checksums) + "\n", encoding="utf-8")
 (destination / "BUILD-INFO.txt").write_text(

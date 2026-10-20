@@ -10,11 +10,12 @@ on:
       - '**/gradle-wrapper.properties'
       - '**/src/**'
       - 'scripts/**'
+      - 'release-notes.md'
       - '.github/workflows/android-apk.yml'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: aimei-android-${{ github.ref }}
@@ -44,11 +45,17 @@ jobs:
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a
         with:
           gradle-version: ${{ steps.project.outputs.gradle_version }}
-      - name: Compile APK and run Android lint
+      - name: Preserve Android test signing identity
+        if: steps.project.outputs.ready == 'true'
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ~/.android/debug.keystore
+          key: aimei-test-signing-v1
+      - name: Compile APK, run tests and Android lint
         if: steps.project.outputs.ready == 'true'
         working-directory: ${{ steps.project.outputs.directory }}
-        run: gradle --no-daemon --stacktrace --console=plain assembleDebug lintDebug
-      - name: Collect APK, checksums and source snapshot
+        run: gradle --no-daemon --stacktrace --console=plain assembleDebug testDebugUnitTest lintDebug
+      - name: Verify signature and collect APK, checksums and source
         if: steps.project.outputs.ready == 'true'
         env:
           PROJECT_DIR: ${{ steps.project.outputs.directory }}
@@ -61,11 +68,29 @@ jobs:
           path: dist/*
           if-no-files-found: error
           retention-days: 30
-      - name: Upload lint reports
+      - name: Back up test signing identity
+        if: steps.project.outputs.ready == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Aimei-test-signing
+          path: ~/.android/debug.keystore
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 90
+      - name: Publish downloadable Android test build
+        if: steps.project.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: aimei-v0.6.0-build-${{ github.run_number }}
+        run: |
+          gh release create "$RELEASE_TAG" dist/*.apk dist/SHA256SUMS.txt dist/Aimei-built-source.zip --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "爱美 0.6.0 安卓测试版" --notes-file release-notes.md --prerelease
+      - name: Upload lint and test reports
         if: always() && steps.project.outputs.ready == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: Aimei-lint-reports
-          path: ${{ steps.project.outputs.directory }}/**/build/reports/lint-results*
+          name: Aimei-check-reports
+          path: |
+            ${{ steps.project.outputs.directory }}/**/build/reports/lint-results*
+            ${{ steps.project.outputs.directory }}/**/build/reports/tests/**
           if-no-files-found: ignore
           retention-days: 14
