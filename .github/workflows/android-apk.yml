@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      AIMEI_TEST_KEYSTORE: ${{ runner.temp }}/aimei-signing/debug.keystore
+      AIMEI_TEST_KEYSTORE: ${{ github.workspace }}/.aimei-signing/debug.keystore
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -51,7 +51,7 @@ jobs:
         if: steps.project.outputs.ready == 'true'
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
-          path: ${{ runner.temp }}/aimei-signing
+          path: ${{ github.workspace }}/.aimei-signing
           key: aimei-test-signing-v2
       - name: Prepare Android test signing key
         if: steps.project.outputs.ready == 'true'
@@ -82,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: Aimei-test-signing
-          path: ~/.android/debug.keystore
+          path: ${{ github.workspace }}/.aimei-signing/debug.keystore
           if-no-files-found: error
           include-hidden-files: true
           retention-days: 90
