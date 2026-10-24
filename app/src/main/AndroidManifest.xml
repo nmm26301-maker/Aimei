@@ -1,27 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-feature android:name="android.hardware.camera.any" android:required="false"/>
-    <application
+    <application android:allowBackup="false"
         android:label="@string/app_name"
-        android:icon="@drawable/ic_aimei"
-        android:roundIcon="@drawable/ic_aimei"
         android:theme="@style/AppTheme"
-        android:allowBackup="false"
-        android:hardwareAccelerated="true"
-        android:supportsRtl="true"
         android:usesCleartextTraffic="false">
-        <activity android:name=".MainActivity" android:exported="true"
-            android:configChanges="orientation|screenSize|keyboardHidden">
+        <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <provider android:name=".WardrobeProvider"
-            android:authorities="com.aimei.app.wardrobe"
-            android:exported="false"
-            android:grantUriPermissions="true"/>
+        <service android:name=".SafeSkipService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true"
+            android:label="@string/service_name">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
     </application>
 </manifest>
