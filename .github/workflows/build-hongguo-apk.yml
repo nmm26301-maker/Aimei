@@ -14,7 +14,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
@@ -24,7 +23,11 @@ jobs:
           javac -d /tmp/rules app/src/main/java/com/example/hongguosafeskip/SkipRules.java tests/SkipRulesTest.java
           java -cp /tmp/rules SkipRulesTest
       - name: Install Android SDK 34
-        run: sdkmanager --install 'platforms;android-34' 'build-tools;34.0.0'
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          command -v sdkmanager
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager --install 'platforms;android-34' 'build-tools;34.0.0'
       - name: Build installable debug APK
         run: gradle :app:assembleDebug --stacktrace --no-daemon
       - name: Publish APK
